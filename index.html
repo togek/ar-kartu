@@ -1,186 +1,146 @@
 <html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-    <style>
-      body { margin: 0; overflow: hidden; }
-      /* Optional: Gaya dasar untuk kursor visual */
-      #cursor {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 20px;
-        height: 20px;
-        border: 2px solid white;
-        border-radius: 50%;
-        pointer-events: none; /* Penting agar tidak menghalangi klik */
-        z-index: 9999;
-      }
-    </style>
-  </head>
-  <body>
-    <a-scene
-      mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/card-example/card.mind"
-      color-space="sRGB"
-      renderer="colorManagement: true, physicallyCorrectLights"
-      vr-mode-ui="enabled: false"
-      device-orientation-permission-ui="enabled: false"
-      embedded
-      cursor="rayOrigin: mouse; fuse: false; clickTolerance: 0.02;" /* Menambahkan fuse: false dan clickTolerance */
-    >
-      <a-assets>
-        <img id="card" src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/card-example/card.png" crossorigin="anonymous" />
-        </a-assets>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <style>
+    body { margin: 0; overflow: hidden; }
+  </style>
+</head>
 
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+<body>
+  <a-scene
+    mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/card-example/card.mind"
+    color-space="sRGB"
+    renderer="colorManagement: true, physicallyCorrectLights"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false"
+    embedded
+    cursor="rayOrigin: mouse"
+  >
 
-      <a-entity mindar-image-target="targetIndex: 0" id="marker">
-        <a-plane src="#card" position="0 0 0" height="0.552" width="1"></a-plane>
+    <a-assets>
+      <img id="card" src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/card-example/card.png" crossorigin="anonymous" />
+    </a-assets>
 
-        <a-entity id="video-container">
-          <a-entity geometry="primitive: box; height: 0.001; width: 0.001; depth: 0.001" visible="false"></a-entity>
-        </a-entity>
+    <!-- ✅ Tambahkan raycaster dan cursor agar klik/sentuhan bisa bekerja -->
+    <a-camera 
+      position="0 0 0" 
+      look-controls="enabled: false" 
+      raycaster="objects: .clickable" 
+      cursor="rayOrigin: mouse">
+    </a-camera>
+
+    <a-entity mindar-image-target="targetIndex: 0" id="marker">
+      <a-plane src="#card" position="0 0 0" height="0.552" width="1"></a-plane>
+
+      <a-entity id="video-container">
+        <!-- Dummy -->
+        <a-entity geometry="primitive: box; height: 0.001; width: 0.001; depth: 0.001" visible="false"></a-entity>
       </a-entity>
-    </a-scene>
+    </a-entity>
+  </a-scene>
 
-    <script>
-      const marker = document.querySelector("#marker");
-      const container = document.querySelector("#video-container");
+  <script>
+    const marker = document.querySelector("#marker");
+    const container = document.querySelector("#video-container");
 
-      let video;
-      let videoEl;
-      let waBtn, igBtn, mapsBtn; // Deklarasikan di scope yang lebih luas
+    let video;
+    let videoEl;
 
-      marker.addEventListener("targetFound", () => {
-        console.log("Target Found!");
-        if (!videoEl) {
-          // Buat video element
-          video = document.createElement("video");
-          video.setAttribute("src", "video.mp4"); // Pastikan video.mp4 ada di direktori yang sama
-          video.setAttribute("loop", "");
-          video.setAttribute("muted", "");
-          video.setAttribute("playsinline", "");
-          video.setAttribute("id", "dynamicVideo");
-          video.crossOrigin = "anonymous";
-          document.body.appendChild(video); // Tambahkan video ke DOM body
+    marker.addEventListener("targetFound", () => {
+      if (!videoEl) {
+        // Video element
+        video = document.createElement("video");
+        video.setAttribute("src", "video.mp4");
+        video.setAttribute("loop", "");
+        video.setAttribute("muted", "");
+        video.setAttribute("playsinline", "");
+        video.setAttribute("id", "dynamicVideo");
+        video.crossOrigin = "anonymous";
+        document.body.appendChild(video);
 
-          // Tambah ke <a-video>
-          videoEl = document.createElement("a-video");
-          videoEl.setAttribute("src", "#dynamicVideo");
-          videoEl.setAttribute("width", "1");
-          videoEl.setAttribute("height", "0.5625");
-          videoEl.setAttribute("position", "0 0 0.1"); // Posisikan sedikit di depan marker
-          videoEl.setAttribute("visible", "false");
-          videoEl.setAttribute("material", "opacity: 0; transparent: true");
-          videoEl.setAttribute("animation__fade", "property: material.opacity; to: 1; dur: 1000; easing: easeOutQuad; startEvents: show");
-          videoEl.setAttribute("animation__visible", "property: visible; to: true; startEvents: show");
-          container.appendChild(videoEl);
+        videoEl = document.createElement("a-video");
+        videoEl.setAttribute("src", "#dynamicVideo");
+        videoEl.setAttribute("width", "1");
+        videoEl.setAttribute("height", "0.5625");
+        videoEl.setAttribute("position", "0 0 0.1");
+        videoEl.setAttribute("visible", "false");
+        videoEl.setAttribute("material", "opacity: 0; transparent: true");
+        videoEl.setAttribute("animation__fade", "property: material.opacity; to: 1; dur: 1000; easing: easeOutQuad; startEvents: show");
+        videoEl.setAttribute("animation__visible", "property: visible; to: true; startEvents: show");
+        container.appendChild(videoEl);
 
-          // Tombol WhatsApp
-          waBtn = document.createElement("a-image");
-          waBtn.setAttribute("src", "https://cdn-icons-png.flaticon.com/512/733/733585.png");
-          waBtn.setAttribute("position", "-0.4 -0.35 0.15"); // Posisikan lebih di depan
-          waBtn.setAttribute("width", "0.15");
-          waBtn.setAttribute("height", "0.15");
-          waBtn.setAttribute("material", "opacity: 0; transparent: true");
-          waBtn.setAttribute("animation__fade", "property: material.opacity; to: 1; dur: 1000; startEvents: show");
-          waBtn.setAttribute("animation__visible", "property: visible; to: true; startEvents: show");
-          waBtn.setAttribute("visible", "false");
-          waBtn.classList.add("clickable"); // Menambahkan kelas clickable
-          waBtn.addEventListener("click", () => {
-            console.log("WhatsApp Clicked!");
-            window.open("https://wa.me/6281218835991", "_blank");
+        // WhatsApp Button
+        const waBtn = document.createElement("a-image");
+        waBtn.setAttribute("src", "https://cdn-icons-png.flaticon.com/512/733/733585.png");
+        waBtn.setAttribute("position", "-0.4 -0.35 0.2"); // dinaikkan sedikit ke depan
+        waBtn.setAttribute("width", "0.15");
+        waBtn.setAttribute("height", "0.15");
+        waBtn.setAttribute("material", "opacity: 0; transparent: true");
+        waBtn.setAttribute("animation__fade", "property: material.opacity; to: 1; dur: 1000; startEvents: show");
+        waBtn.setAttribute("animation__visible", "property: visible; to: true; startEvents: show");
+        waBtn.setAttribute("visible", "false");
+        waBtn.classList.add("clickable");
+        waBtn.addEventListener("click", () => {
+          window.open("https://wa.me/6281218835991", "_blank");
+        });
+        container.appendChild(waBtn);
+
+        // Instagram Button
+        const igBtn = document.createElement("a-image");
+        igBtn.setAttribute("src", "https://cdn-icons-png.flaticon.com/512/2111/2111463.png");
+        igBtn.setAttribute("position", "0 -0.35 0.2");
+        igBtn.setAttribute("width", "0.15");
+        igBtn.setAttribute("height", "0.15");
+        igBtn.setAttribute("material", "opacity: 0; transparent: true");
+        igBtn.setAttribute("animation__fade", "property: material.opacity; to: 1; dur: 1000; startEvents: show");
+        igBtn.setAttribute("animation__visible", "property: visible; to: true; startEvents: show");
+        igBtn.setAttribute("visible", "false");
+        igBtn.classList.add("clickable");
+        igBtn.addEventListener("click", () => {
+          window.open("https://instagram.com/yourusername", "_blank");
+        });
+        container.appendChild(igBtn);
+
+        // Maps Button
+        const mapsBtn = document.createElement("a-image");
+        mapsBtn.setAttribute("src", "https://cdn-icons-png.flaticon.com/512/684/684908.png");
+        mapsBtn.setAttribute("position", "0.4 -0.35 0.2");
+        mapsBtn.setAttribute("width", "0.15");
+        mapsBtn.setAttribute("height", "0.15");
+        mapsBtn.setAttribute("material", "opacity: 0; transparent: true");
+        mapsBtn.setAttribute("animation__fade", "property: material.opacity; to: 1; dur: 1000; startEvents: show");
+        mapsBtn.setAttribute("animation__visible", "property: visible; to: true; startEvents: show");
+        mapsBtn.setAttribute("visible", "false");
+        mapsBtn.classList.add("clickable");
+        mapsBtn.addEventListener("click", () => {
+          window.open("https://maps.google.com/?q=Your+Business+Location", "_blank");
+        });
+        container.appendChild(mapsBtn);
+
+        // Play setelah delay
+        setTimeout(() => {
+          video.play().then(() => {
+            videoEl.emit("show");
+            waBtn.emit("show");
+            igBtn.emit("show");
+            mapsBtn.emit("show");
+          }).catch(err => {
+            console.warn("Autoplay failed", err);
           });
-          container.appendChild(waBtn);
+        }, 300);
+      } else {
+        video.play();
+        videoEl.emit("show");
+      }
+    });
 
-          // Tombol Instagram
-          igBtn = document.createElement("a-image");
-          igBtn.setAttribute("src", "https://cdn-icons-png.flaticon.com/512/2111/2111463.png");
-          igBtn.setAttribute("position", "0 -0.35 0.15"); // Posisikan lebih di depan
-          igBtn.setAttribute("width", "0.15");
-          igBtn.setAttribute("height", "0.15");
-          igBtn.setAttribute("material", "opacity: 0; transparent: true");
-          igBtn.setAttribute("animation__fade", "property: material.opacity; to: 1; dur: 1000; startEvents: show");
-          igBtn.setAttribute("animation__visible", "property: visible; to: true; startEvents: show");
-          igBtn.setAttribute("visible", "false");
-          igBtn.classList.add("clickable"); // Menambahkan kelas clickable
-          igBtn.addEventListener("click", () => {
-            console.log("Instagram Clicked!");
-            window.open("https://instagram.com/yourusername", "_blank");
-          });
-          container.appendChild(igBtn);
-
-          // Tombol Maps
-          mapsBtn = document.createElement("a-image");
-          mapsBtn.setAttribute("src", "https://cdn-icons-png.flaticon.com/512/684/684908.png");
-          mapsBtn.setAttribute("position", "0.4 -0.35 0.15"); // Posisikan lebih di depan
-          mapsBtn.setAttribute("width", "0.15");
-          mapsBtn.setAttribute("height", "0.15");
-          mapsBtn.setAttribute("material", "opacity: 0; transparent: true");
-          mapsBtn.setAttribute("animation__fade", "property: material.opacity; to: 1; dur: 1000; startEvents: show");
-          mapsBtn.setAttribute("animation__visible", "property: visible; to: true; startEvents: show");
-          mapsBtn.setAttribute("visible", "false");
-          mapsBtn.classList.add("clickable"); // Menambahkan kelas clickable
-          mapsBtn.addEventListener("click", () => {
-            console.log("Maps Clicked!");
-            window.open("http://maps.google.com/?q=-7.1212397,112.3878809", "_blank"); // Mengubah URL Maps ke format yang lebih umum
-          });
-          container.appendChild(mapsBtn);
-
-          // PENTING: Refresh kursor setelah menambahkan elemen yang dapat diklik secara dinamis
-          // Ini harus dilakukan setelah semua elemen yang ingin diklik ditambahkan ke DOM A-Frame
-          const sceneEl = document.querySelector('a-scene');
-          if (sceneEl && sceneEl.components.cursor) {
-            // Memberi waktu A-Frame untuk memproses penambahan DOM sebelum cursor di-update
-            setTimeout(() => {
-                sceneEl.components.cursor.update();
-                console.log("Cursor updated!");
-            }, 100); // Penundaan kecil untuk memastikan elemen terpasang sempurna
-          }
-
-          // Delay sebelum play video dan emit "show" untuk animasi
-          setTimeout(() => {
-            video.play().then(() => {
-              videoEl.emit("show");
-              waBtn.emit("show");
-              igBtn.emit("show");
-              mapsBtn.emit("show");
-              console.log("Video playing and buttons showing.");
-            }).catch(err => {
-              console.warn("Autoplay failed:", err);
-              // Jika autoplay gagal, coba mainkan video secara manual atau berikan instruksi kepada user
-              video.muted = false; // Mungkin perlu unmute agar user bisa mendengar dan mengklik
-              video.play();
-              videoEl.emit("show");
-              waBtn.emit("show");
-              igBtn.emit("show");
-              mapsBtn.emit("show");
-            });
-          }, 300); // Penundaan untuk memuat video
-        } else {
-          // Jika elemen sudah ada, cukup mainkan video dan tampilkan
-          video.play();
-          videoEl.emit("show");
-          waBtn.emit("show");
-          igBtn.emit("show");
-          mapsBtn.emit("show");
-          console.log("Target Found again, re-showing content.");
-        }
-      });
-
-      marker.addEventListener("targetLost", () => {
-        console.log("Target Lost!");
-        if (video && !video.paused) {
-          video.pause();
-          // Sembunyikan juga tombol saat target hilang
-          if (videoEl) videoEl.setAttribute("visible", "false");
-          if (waBtn) waBtn.setAttribute("visible", "false");
-          if (igBtn) igBtn.setAttribute("visible", "false");
-          if (mapsBtn) mapsBtn.setAttribute("visible", "false");
-        }
-      });
-    </script>
-  </body>
+    marker.addEventListener("targetLost", () => {
+      if (video && !video.paused) {
+        video.pause();
+      }
+    });
+  </script>
+</body>
 </html>
