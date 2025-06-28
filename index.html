@@ -24,12 +24,15 @@
     </a-assets>
 
     <!-- ✅ Tambahkan raycaster dan cursor agar klik/sentuhan bisa bekerja -->
-    <a-camera 
-      position="0 0 0" 
-      look-controls="enabled: false" 
-      raycaster="objects: .clickable" 
-      cursor="rayOrigin: mouse">
-    </a-camera>
+    <a-camera position="0 0 0" look-controls="enabled: false" raycaster="objects: .clickable">
+  <a-entity 
+    cursor="fuse: false; rayOrigin: mouse" 
+    position="0 0 -1" 
+    geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02" 
+    material="color: black; shader: flat">
+  </a-entity>
+</a-camera>
+
 
     <a-entity mindar-image-target="targetIndex: 0" id="marker">
       <a-plane src="#card" position="0 0 0" height="0.552" width="1"></a-plane>
